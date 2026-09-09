@@ -1,7 +1,7 @@
 export default function SkeletonCard({ featured = false }) {
   return (
     <div
-      className={`rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#0D1527] shadow-news-card dark:shadow-news-card-dark ${
+      className={`rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/[0.1] bg-white dark:bg-[#0B1120] shadow-news-card dark:shadow-news-card-dark ${
         featured ? "md:col-span-2 md:row-span-2" : ""
       }`}
     >
@@ -20,4 +20,3 @@ export default function SkeletonCard({ featured = false }) {
     </div>
   );
 }
-

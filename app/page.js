@@ -36,7 +36,7 @@ export default function HomePage() {
   }, [activeQuery, category]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#070A12] text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#F6F8FC] dark:bg-[#060913] text-slate-900 dark:text-slate-100 selection:bg-[#FF1053]/20 selection:text-[#FF1053]">
       <Ticker articles={articles} />
       <Header
         activeCategory={category}

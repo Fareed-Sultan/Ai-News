@@ -49,7 +49,7 @@ export default function ArticleModal({
     <AnimatePresence>
       {article && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-md p-0 sm:p-4 md:p-6"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4 md:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -63,7 +63,7 @@ export default function ArticleModal({
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-white dark:bg-[#0D1527] border border-slate-200 dark:border-white/10 w-full sm:max-w-2xl lg:max-w-3xl rounded-t-3xl sm:rounded-2xl max-h-[92vh] overflow-y-auto shadow-2xl"
+            className="relative bg-white dark:bg-[#0B1120] border border-slate-200 dark:border-white/10 w-full sm:max-w-2xl lg:max-w-3xl rounded-t-3xl sm:rounded-2xl max-h-[92vh] overflow-y-auto shadow-2xl"
           >
             {/* Modal Hero Image */}
             <div className="h-60 sm:h-80 bg-slate-950 overflow-hidden relative">
@@ -82,24 +82,24 @@ export default function ArticleModal({
 
               {/* Source & Close Bar */}
               <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-xs font-bold text-white uppercase tracking-wider">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-xs font-black text-white uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-[#FF1053] animate-pulse" />
                   {article.source}
                 </span>
 
                 <button
                   onClick={onClose}
                   aria-label="Close"
-                  className="bg-black/75 hover:bg-black backdrop-blur-md border border-white/20 rounded-full p-2 text-white transition-colors"
+                  className="bg-black/80 hover:bg-black backdrop-blur-md border border-white/20 rounded-full p-2 text-white transition-colors"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Bottom Meta Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center gap-3 text-xs font-semibold text-slate-300">
+              <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center gap-3 text-xs font-bold text-slate-300">
                 <span className="flex items-center gap-1">
-                  <Clock size={12} />
+                  <Clock size={12} className="text-[#00E5FF]" />
                   {timeAgo(article.publishedAt)}
                 </span>
                 {article.author && <span>· By {article.author}</span>}
@@ -108,13 +108,13 @@ export default function ArticleModal({
 
             {/* Modal Body */}
             <div className="p-6 sm:p-8 space-y-5">
-              <h2 className="font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-slate-900 dark:text-white leading-tight">
+              <h2 className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-slate-900 dark:text-white leading-tight">
                 {article.title}
               </h2>
 
               {/* Takeaway Brief Box */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/90 dark:border-white/10 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#FF1053] dark:text-[#FF1053]">
                   <FileText size={14} />
                   <span>Story Overview</span>
                 </div>
@@ -129,7 +129,7 @@ export default function ArticleModal({
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white px-6 py-3 rounded-full text-sm font-bold shadow-md hover:shadow-glow-red transition-all"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF1053] to-[#E11D48] hover:from-[#E11D48] hover:to-[#BE123C] text-white px-6 py-3 rounded-full text-sm font-black shadow-md hover:shadow-glow-crimson transition-all"
                 >
                   Read Full Original Story
                   <ExternalLink size={15} />
@@ -137,11 +137,11 @@ export default function ArticleModal({
 
                 <button
                   onClick={() => onToggleBookmark(article)}
-                  className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/[0.05] text-slate-800 dark:text-slate-200 px-5 py-3 rounded-full text-sm font-semibold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                  className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/[0.05] text-slate-800 dark:text-slate-200 px-5 py-3 rounded-full text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                 >
                   {isBookmarked ? (
                     <>
-                      <BookmarkCheck size={16} className="text-emerald-500 fill-emerald-500" /> Saved
+                      <BookmarkCheck size={16} className="text-[#00E599] fill-[#00E599]" /> Saved
                     </>
                   ) : (
                     <>
@@ -152,11 +152,11 @@ export default function ArticleModal({
 
                 <button
                   onClick={handleShare}
-                  className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/[0.05] text-slate-800 dark:text-slate-200 px-5 py-3 rounded-full text-sm font-semibold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                  className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/[0.05] text-slate-800 dark:text-slate-200 px-5 py-3 rounded-full text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                 >
                   {copied ? (
                     <>
-                      <Check size={15} className="text-emerald-500" /> Link Copied
+                      <Check size={15} className="text-[#00E599]" /> Link Copied
                     </>
                   ) : (
                     <>

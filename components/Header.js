@@ -60,36 +60,36 @@ export default function Header({
   const currentCountryObj = COUNTRIES.find((c) => c.code === country);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#080C14]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/[0.08] shadow-sm transition-colors duration-300">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#060913]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/[0.1] shadow-sm transition-colors duration-300">
       {/* Top Utility Broadcast Bar */}
-      <div className="border-b border-slate-100 dark:border-white/[0.05] bg-slate-50/70 dark:bg-black/40 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+      <div className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/80 dark:bg-black/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
           {/* Left: Date & Live Beacon */}
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+            <span className="flex items-center gap-1.5 font-black uppercase tracking-wider text-[#FF1053]">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF1053] opacity-80"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF1053]"></span>
               </span>
               LIVE FEED
             </span>
             <span className="hidden sm:inline-block text-slate-300 dark:text-white/20">|</span>
-            <span className="hidden sm:inline font-semibold tracking-wide text-slate-600 dark:text-slate-300">
+            <span className="hidden sm:inline font-semibold tracking-wide text-slate-700 dark:text-slate-300">
               {currentDate}
             </span>
           </div>
 
-          {/* Center / Right: Quick Trending Tags & Country Selector & Reading List */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          {/* Center / Right: Reading List, Country Selector & Dark Theme Toggle */}
+          <div className="flex items-center gap-2 sm:gap-3.5">
             <button
               onClick={onOpenBookmarks}
-              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-white/[0.08] hover:bg-slate-300/80 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 transition-all text-[11px] font-semibold"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-200/70 dark:bg-white/[0.08] hover:bg-slate-300/80 dark:hover:bg-white/15 text-slate-800 dark:text-slate-200 transition-all text-[11px] font-bold"
               title="View Bookmarked Articles"
             >
-              <Bookmark size={12} className="text-rose-500 fill-rose-500/20" />
+              <Bookmark size={12} className="text-[#FF1053] fill-[#FF1053]/20" />
               <span>Saved</span>
               {bookmarkCount > 0 && (
-                <span className="ml-0.5 bg-rose-600 text-white px-1.5 py-0.2 rounded-full text-[10px] font-bold">
+                <span className="ml-0.5 bg-[#FF1053] text-white px-1.5 py-0.2 rounded-full text-[10px] font-black">
                   {bookmarkCount}
                 </span>
               )}
@@ -121,7 +121,7 @@ export default function Header({
                     exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
                     transition={{ duration: 0.18 }}
                   >
-                    <Sun size={14} className="text-amber-400" />
+                    <Sun size={14} className="text-[#FFB703]" />
                   </motion.span>
                 ) : (
                   <motion.span
@@ -131,7 +131,7 @@ export default function Header({
                     exit={{ rotate: -90, opacity: 0, scale: 0.6 }}
                     transition={{ duration: 0.18 }}
                   >
-                    <Moon size={14} className="text-slate-700" />
+                    <Moon size={14} className="text-slate-800" />
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -142,7 +142,7 @@ export default function Header({
 
       {/* Main Masthead Tier */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-3 md:py-3.5 gap-4">
+        <div className="flex items-center justify-between py-3.5 md:py-4 gap-4">
           {/* Logo Brand */}
           <a
             href="/"
@@ -154,22 +154,22 @@ export default function Header({
             }}
             className="group flex items-center gap-3 shrink-0"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-600 via-brand-crimson to-blue-600 p-0.5 shadow-md group-hover:shadow-glow-red transition-all">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <span className="font-display font-black text-xl text-white tracking-tighter">P</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF1053] via-[#0066FF] to-[#00E5FF] p-0.5 shadow-md group-hover:shadow-glow-crimson transition-all">
+              <div className="w-full h-full bg-[#060913] rounded-[10px] flex items-center justify-center">
+                <span className="font-display font-black text-2xl text-white tracking-tighter">P</span>
               </div>
             </div>
             <div className="flex flex-col">
               <div className="flex items-baseline gap-1.5">
-                <span className="font-display font-extrabold text-2xl sm:text-3xl tracking-tight text-slate-900 dark:text-white uppercase">
+                <span className="font-display font-black text-2xl sm:text-3xl tracking-tight text-slate-900 dark:text-white uppercase">
                   PULSE
                 </span>
-                <span className="text-[10px] font-black tracking-widest px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase">
+                <span className="text-[10px] font-black tracking-widest px-1.5 py-0.5 rounded bg-[#FF1053] text-white uppercase shadow-xs">
                   24/7
                 </span>
               </div>
               <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase -mt-0.5">
-                Global News Network
+                Global News & AI Network
               </span>
             </div>
           </a>
@@ -181,7 +181,7 @@ export default function Header({
                 e.preventDefault();
                 onSearchSubmit(searchValue);
               }}
-              className="w-full flex items-center gap-2 bg-slate-100/90 dark:bg-white/[0.06] border border-slate-200/90 dark:border-white/10 rounded-xl px-3.5 py-2 shadow-inner focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all"
+              className="w-full flex items-center gap-2 bg-slate-100/90 dark:bg-white/[0.06] border border-slate-200/90 dark:border-white/10 rounded-xl px-3.5 py-2 shadow-inner focus-within:border-[#0066FF] dark:focus-within:border-[#0066FF] focus-within:ring-2 focus-within:ring-[#0066FF]/20 transition-all"
             >
               <Search size={15} className="text-slate-400 shrink-0" />
               <input
@@ -189,7 +189,7 @@ export default function Header({
                 value={searchValue}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Search breaking stories, topics, keywords..."
-                className="bg-transparent outline-none text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-full"
+                className="bg-transparent outline-none text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-full font-medium"
               />
               {searchValue ? (
                 <button
@@ -224,7 +224,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Category Navigation Pills */}
+        {/* Category Navigation Pills with Sharp Neon Highlights */}
         <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-t border-slate-100 dark:border-white/[0.06]">
           {CATEGORIES.map((cat) => {
             const isActive = !searchValue && activeCategory === cat.id;
@@ -236,17 +236,17 @@ export default function Header({
                   onSearchSubmit("");
                   onCategoryChange(cat.id);
                 }}
-                className={`relative px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap ${
+                className={`relative px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap ${
                   isActive
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                    ? "bg-[#060913] text-white dark:bg-white dark:text-[#060913] shadow-md"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08]"
                 }`}
               >
                 {cat.label}
                 {isActive && (
                   <motion.div
                     layoutId="activeCategoryIndicator"
-                    className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-rose-600 rounded-full"
+                    className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-[#FF1053] rounded-full shadow-glow-crimson"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -298,8 +298,7 @@ export default function Header({
       </div>
 
       {/* Dynamic Sharp Border Line */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-rose-600 via-blue-600 to-amber-500 opacity-90 shadow-sm" />
+      <div className="h-[2px] w-full bg-gradient-to-r from-[#FF1053] via-[#0066FF] to-[#00E5FF] opacity-95 shadow-sm" />
     </header>
   );
 }
-

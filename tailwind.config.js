@@ -10,16 +10,17 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          crimson: "#E11D48",    // Sharp Breaking News Red
-          ruby: "#BE123C",
-          blue: "#2563EB",       // Electric Cobalt Blue
-          cyan: "#0284C7",       // Vibrant Cyan / Tech
-          amber: "#D97706",      // Sharp Market Gold / Amber
-          emerald: "#059669",    // Live / Sports Emerald
-          purple: "#7C3AED",     // Culture / Insight Violet
-          dark: "#080C14",       // Deep Obsidian Base
-          darkCard: "#0F172A",   // High-contrast Card Surface
-          darkBorder: "rgba(255, 255, 255, 0.08)",
+          crimson: "#FF1053",    // Sharp Hyper Crimson / Breaking Red
+          ruby: "#E11D48",
+          blue: "#0066FF",       // Sharp Electric Cobalt
+          cyan: "#00E5FF",       // Neon Cyan / High Tech
+          amber: "#FFB703",      // Radiant Sunburst Gold / Markets
+          emerald: "#00E599",    // Vivid Cyber Mint / Live Sports
+          purple: "#9333EA",     // Vivid Violet / Culture
+          obsidian: "#060913",   // Deep obsidian space base
+          cardDark: "#0B1120",   // High-contrast deep card
+          cardDarkHover: "#111C35",
+          borderDark: "rgba(255, 255, 255, 0.12)",
         },
         slate: {
           50: "#F8FAFC",
@@ -32,7 +33,7 @@ module.exports = {
           700: "#334155",
           800: "#1E293B",
           900: "#0F172A",
-          950: "#080C14",
+          950: "#060913",
         },
       },
       fontFamily: {
@@ -61,11 +62,13 @@ module.exports = {
         ],
       },
       boxShadow: {
-        "glow-red": "0 0 20px -5px rgba(225, 29, 72, 0.4)",
-        "glow-blue": "0 0 20px -5px rgba(37, 99, 235, 0.4)",
-        "glow-amber": "0 0 20px -5px rgba(217, 119, 6, 0.4)",
-        "news-card": "0 4px 20px -4px rgba(0, 0, 0, 0.06), 0 2px 6px -2px rgba(0, 0, 0, 0.04)",
-        "news-card-dark": "0 8px 30px -4px rgba(0, 0, 0, 0.6), 0 2px 10px -2px rgba(0, 0, 0, 0.4)",
+        "glow-crimson": "0 0 25px -4px rgba(255, 16, 83, 0.55)",
+        "glow-blue": "0 0 25px -4px rgba(0, 102, 255, 0.55)",
+        "glow-cyan": "0 0 25px -4px rgba(0, 229, 255, 0.55)",
+        "glow-amber": "0 0 25px -4px rgba(255, 183, 3, 0.55)",
+        "glow-emerald": "0 0 25px -4px rgba(0, 229, 153, 0.55)",
+        "news-card": "0 6px 24px -4px rgba(0, 0, 0, 0.07), 0 2px 8px -2px rgba(0, 0, 0, 0.04)",
+        "news-card-dark": "0 10px 35px -5px rgba(0, 0, 0, 0.7), 0 4px 14px -3px rgba(0, 0, 0, 0.5)",
       },
       keyframes: {
         ticker: {
@@ -81,8 +84,8 @@ module.exports = {
           "50%": { opacity: "0.3", transform: "scale(0.85)" },
         },
         beacon: {
-          "0%": { transform: "scale(1)", opacity: "0.8" },
-          "100%": { transform: "scale(2.4)", opacity: "0" },
+          "0%": { transform: "scale(1)", opacity: "0.9" },
+          "100%": { transform: "scale(2.6)", opacity: "0" },
         },
       },
       animation: {
@@ -95,4 +98,3 @@ module.exports = {
   },
   plugins: [],
 };
-

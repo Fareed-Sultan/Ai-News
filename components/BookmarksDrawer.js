@@ -18,7 +18,7 @@ export default function BookmarksDrawer({
       {isOpen && (
         <>
           <motion.div
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -29,17 +29,17 @@ export default function BookmarksDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 320 }}
-            className="fixed top-0 right-0 z-50 h-full w-full sm:w-[420px] bg-white dark:bg-[#090E1A] shadow-2xl overflow-y-auto border-l border-slate-200 dark:border-white/10 flex flex-col"
+            className="fixed top-0 right-0 z-50 h-full w-full sm:w-[420px] bg-white dark:bg-[#060913] shadow-2xl overflow-y-auto border-l border-slate-200 dark:border-white/10 flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 sticky top-0 bg-white/95 dark:bg-[#090E1A]/95 backdrop-blur-md z-10 shrink-0">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 sticky top-0 bg-white/95 dark:bg-[#060913]/95 backdrop-blur-md z-10 shrink-0">
               <div className="flex items-center gap-2">
-                <Bookmark size={18} className="text-rose-600 fill-rose-600" />
-                <h2 className="font-display font-extrabold text-xl text-slate-900 dark:text-white uppercase tracking-tight">
+                <Bookmark size={18} className="text-[#FF1053] fill-[#FF1053]" />
+                <h2 className="font-display font-black text-xl text-slate-900 dark:text-white uppercase tracking-tight">
                   Saved Reading List
                 </h2>
                 {bookmarks.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-600 text-white">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#FF1053] text-white">
                     {bookmarks.length}
                   </span>
                 )}
@@ -60,10 +60,10 @@ export default function BookmarksDrawer({
                   <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 mb-4">
                     <Bookmark size={24} />
                   </div>
-                  <p className="font-display font-bold text-lg text-slate-900 dark:text-white mb-1">
+                  <p className="font-display font-black text-lg text-slate-900 dark:text-white mb-1">
                     Your reading list is empty
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed font-medium">
                     Bookmark interesting stories from the feed by clicking the bookmark icon on any card to read them anytime.
                   </p>
                 </div>
@@ -94,15 +94,15 @@ export default function BookmarksDrawer({
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-[#FF1053] dark:text-[#FF1053] mb-1">
                               {article.source} · {timeAgo(article.publishedAt)}
                             </p>
-                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-[#0066FF] dark:group-hover:text-[#00E5FF] transition-colors">
                               {article.title}
                             </p>
                           </div>
                           <div className="flex items-center justify-between pt-2">
-                            <span className="text-[11px] font-bold text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 flex items-center gap-1">
+                            <span className="text-[11px] font-black text-slate-400 group-hover:text-[#0066FF] dark:group-hover:text-[#00E5FF] flex items-center gap-1 uppercase tracking-wider">
                               Read <ArrowRight size={11} />
                             </span>
                             <button
@@ -111,7 +111,7 @@ export default function BookmarksDrawer({
                                 onToggleBookmark(article);
                               }}
                               aria-label="Remove from reading list"
-                              className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                              className="text-slate-400 hover:text-[#FF1053] transition-colors p-1"
                               title="Remove"
                             >
                               <BookmarkX size={16} />

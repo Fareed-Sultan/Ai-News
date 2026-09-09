@@ -8,25 +8,25 @@
   }
   
   body {
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: #f6f8fc;
+    color: #0b1120;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   .dark body {
-    background-color: #070a12;
+    background-color: #050811;
     color: #f1f5f9;
   }
 }
 
-/* Custom High-Contrast Scrollbar */
+/* Custom Neon & Glass Scrollbar */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #edf2f9;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -36,7 +36,7 @@
   background: #94a3b8;
 }
 .dark ::-webkit-scrollbar-track {
-  background: #080c14;
+  background: #060913;
 }
 .dark ::-webkit-scrollbar-thumb {
   background: #1e293b;
@@ -48,27 +48,27 @@
 
 /* Glassmorphism & Surface Utilities */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 .dark .glass-panel {
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 17, 32, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .news-card-surface {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 .dark .news-card-surface {
-  background: #0d1527;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6);
+  background: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.7);
 }
 
 /* Shimmer Loading Skeleton */
@@ -84,34 +84,48 @@
 .dark .shimmer {
   background: linear-gradient(
     90deg,
-    #0f172a 0%,
-    #1e293b 25%,
-    #0f172a 50%
+    #0b1120 0%,
+    #1b253b 25%,
+    #0b1120 50%
   );
   background-size: 800px 100%;
 }
 
 /* Sharp Gradients & Text Accents */
 .text-gradient-crimson {
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 50%, #fb7185 100%);
+  background: linear-gradient(135deg, #ff1053 0%, #ff4b72 50%, #ff7597 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-blue {
-  background: linear-gradient(135deg, #2563eb 0%, #0284c7 50%, #38bdf8 100%);
+  background: linear-gradient(135deg, #0066ff 0%, #00d2ff 50%, #38bdf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-amber {
-  background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
+  background: linear-gradient(135deg, #ff9900 0%, #ffb703 50%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cyber {
+  background: linear-gradient(135deg, #ff1053 0%, #0066ff 50%, #00e5ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .border-gradient-sharp {
-  border-image: linear-gradient(to right, #e11d48, #2563eb, #0284c7) 1;
+  border-image: linear-gradient(to right, #ff1053, #0066ff, #00e5ff) 1;
+}
+
+.neon-glow-crimson {
+  box-shadow: 0 0 20px -3px rgba(255, 16, 83, 0.45);
+}
+
+.neon-glow-blue {
+  box-shadow: 0 0 20px -3px rgba(0, 102, 255, 0.45);
 }
 
 .no-scrollbar {
@@ -126,14 +140,23 @@
 a:focus-visible,
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid #e11d48;
+  outline: 2px solid #ff1053;
   outline-offset: 2px;
 }
 .dark a:focus-visible,
 .dark button:focus-visible,
 .dark input:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid #00e5ff;
   outline-offset: 2px;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float {
+  animation: floatSlow 3s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -146,4 +169,3 @@ input:focus-visible {
     scroll-behavior: auto !important;
   }
 }
-

@@ -3,21 +3,177 @@ import { sanitizeQuery } from "@/lib/searchUtils";
 import { countryMeta } from "@/lib/countries";
 import { getEditorialFallback } from "@/lib/newsImages";
 
-// This route runs on the server only, so the NEWS_API_KEY (and, if set,
-// ANTHROPIC_API_KEY) never reach the browser. All client components call
-// /api/news, never NewsAPI.org or Anthropic directly.
+// ─── Strategy ────────────────────────────────────────────────────────────────
+// PRIMARY:   Google News RSS  — no API key, works in production, completely free
+// SECONDARY: NewsAPI          — only works on localhost (free tier), kept as bonus
+// Both return the same article shape so the frontend needs zero changes.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const BASE_URL = "https://newsapi.org/v2";
+// ─── Google News RSS helpers ──────────────────────────────────────────────────
 
-// IMPORTANT: NewsAPI's free plan now restricts /v2/top-headlines so the
-// `country` param only accepts "us" (see https://newsapi.org/docs/endpoints/top-headlines).
-// That means country=pk (or any country besides us) silently fails/returns
-// nothing, which is why category tabs and the Pakistan/Global toggle used
-// to look broken (everything collapsed to the same generic US feed).
-//
-// Fix: browse by category/country through /v2/everything instead, using a
-// curated domain list per country plus a keyword per category. /everything
-// isn't restricted by country the same way, so this works on the free plan.
+// Country code → Google News geo-topic query and hl/gl/ceid params
+const COUNTRY_GNEWS = {
+  pk: { hl: "en-PK", gl: "PK", ceid: "PK:en", keyword: "Pakistan" },
+  us: { hl: "en-US", gl: "US", ceid: "US:en", keyword: null },
+  gb: { hl: "en-GB", gl: "GB", ceid: "GB:en", keyword: null },
+  in: { hl: "en-IN", gl: "IN", ceid: "IN:en", keyword: null },
+  au: { hl: "en-AU", gl: "AU", ceid: "AU:en", keyword: null },
+  ca: { hl: "en-CA", gl: "CA", ceid: "CA:en", keyword: null },
+  global: { hl: "en-US", gl: "US", ceid: "US:en", keyword: null },
+};
+
+const CATEGORY_GNEWS_TOPIC = {
+  general: "headlines",
+  technology: "technology",
+  business: "business",
+  sports: "sports",
+  entertainment: "entertainment",
+  health: "health",
+  science: "science",
+};
+
+// Build Google News RSS URL
+function buildGoogleNewsUrl({ category, country, query }) {
+  const locale = COUNTRY_GNEWS[country] || COUNTRY_GNEWS["global"];
+  const { hl, gl, ceid } = locale;
+
+  if (query && query.trim()) {
+    // Search feed
+    const q = encodeURIComponent(query.trim());
+    return `https://news.google.com/rss/search?q=${q}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+  }
+
+  // For Pakistan specifically, use search to get Pakistan-specific news
+  if (country === "pk" && category === "general") {
+    const q = encodeURIComponent("Pakistan news");
+    return `https://news.google.com/rss/search?q=${q}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+  }
+
+  // Category topic feeds
+  const topic = CATEGORY_GNEWS_TOPIC[category] || "headlines";
+  if (topic === "headlines") {
+    return `https://news.google.com/rss?hl=${hl}&gl=${gl}&ceid=${ceid}`;
+  }
+
+  // Google News uses topic tokens for categories
+  const TOPIC_TOKENS = {
+    technology: "CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB",
+    business: "CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB",
+    sports: "CAAqJggKIiBDQkFTRWdvSUwyMHZNRGQ2YVhRU0FtVnVHZ0pWVXlnQVAB",
+    entertainment: "CAAqJggKIiBDQkFTRWdvSUwyMHZNREpxYW5RU0FtVnVHZ0pWVXlnQVAB",
+    health: "CAAqIQgKIhtDQkFTRGdvSUwyMHZNR3QwTlRFU0FtVnVLQUFQAQ",
+    science: "CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp0Y1RjU0FtVnVHZ0pWVXlnQVAB",
+  };
+
+  const token = TOPIC_TOKENS[topic];
+  if (token) {
+    return `https://news.google.com/rss/topics/${token}?hl=${hl}&gl=${gl}&ceid=${ceid}`;
+  }
+
+  return `https://news.google.com/rss?hl=${hl}&gl=${gl}&ceid=${ceid}`;
+}
+
+// Minimal XML parser — extracts <item> blocks from RSS without any dependency
+function parseRssXml(xml) {
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const block = match[1];
+
+    const getText = (tag) => {
+      const m = block.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`));
+      return m ? (m[1] || m[2] || "").trim() : "";
+    };
+
+    const title = getText("title")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+
+    const link = getText("link") || getText("guid");
+    const pubDate = getText("pubDate");
+    const description = getText("description")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&nbsp;/g, " ")
+      .trim();
+
+    // Extract source from title — Google News appends " - Source Name"
+    let source = "Google News";
+    let cleanTitle = title;
+    const srcMatch = title.match(/^([\s\S]+?)\s+-\s+([^-]+)$/);
+    if (srcMatch) {
+      cleanTitle = srcMatch[1].trim();
+      source = srcMatch[2].trim();
+    }
+
+    // Try to get image from media:content or enclosure
+    const imgMatch = block.match(/url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i);
+    const image = imgMatch ? imgMatch[1] : null;
+
+    let publishedAt = null;
+    if (pubDate) {
+      try {
+        publishedAt = new Date(pubDate).toISOString();
+      } catch {
+        publishedAt = null;
+      }
+    }
+
+    if (cleanTitle && link && !cleanTitle.includes("[Removed]")) {
+      items.push({ title: cleanTitle, url: link, source, description, image, publishedAt });
+    }
+  }
+
+  return items;
+}
+
+async function fetchGoogleNewsRSS({ category, country, query }) {
+  const url = buildGoogleNewsUrl({ category, country, query });
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; NewsBot/1.0)",
+        "Accept": "application/rss+xml, application/xml, text/xml, */*",
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) return null;
+
+    const xml = await res.text();
+    if (!xml.includes("<item>")) return null;
+
+    return parseRssXml(xml);
+  } catch (err) {
+    console.error("Google News RSS fetch failed:", err.message || err);
+    return null;
+  }
+}
+
+// ─── NewsAPI helpers (secondary, localhost only) ───────────────────────────────
+
+const NEWSAPI_BASE = "https://newsapi.org/v2";
+
+const PK_GENERAL_KEYWORD =
+  'Pakistan OR Islamabad OR Karachi OR Lahore OR Peshawar OR Quetta OR Sindh OR "Pakistan Tehreek-e-Insaf" OR "Pakistan Muslim League" OR "Pakistan Peoples Party"';
+
+const PK_DOMAINS =
+  "dawn.com,tribune.com.pk,thenews.com.pk,geo.tv,arynews.tv,brecorder.com,nation.com.pk,dailytimes.com.pk,samaa.tv";
+
+const GLOBAL_DOMAINS =
+  "bbc.co.uk,cnn.com,reuters.com,apnews.com,theguardian.com,nytimes.com,skynews.com,independent.co.uk,cbsnews.com,aljazeera.com";
+
+const INDIAN_DOMAINS_TO_EXCLUDE =
+  "timesofindia.indiatimes.com,indiatimes.com,ndtv.com,hindustantimes.com,indianexpress.com,news18.com,indiatoday.in,livemint.com,thehindu.com,zeenews.india.com";
 
 const CATEGORY_KEYWORDS = {
   general: null,
@@ -29,39 +185,6 @@ const CATEGORY_KEYWORDS = {
   science: "science OR research OR space OR discovery",
 };
 
-// Pakistani news sites' NewsAPI feeds also carry syndicated wire content
-// (celebrity/entertainment pieces, generic world stories) that has nothing
-// to do with Pakistan itself, which is why "Top" could show things like a
-// years-old Taylor Swift anniversary post from Daily Times. For the
-// general/"Top" tab on the Pakistan toggle, bias the query so it actually
-// has to be about Pakistan.
-//
-// IMPORTANT: avoid ambiguous short forms here. "PTI" is also the standard
-// byline for Press Trust of India (used on nearly every Indian news wire
-// story), and bare "Punjab" matches India's Punjab state too — both were
-// silently flooding the "Pakistan" feed with Indian articles. Use full
-// party names instead of acronyms, and drop the ambiguous bare state name.
-const PK_GENERAL_KEYWORD =
-  'Pakistan OR Islamabad OR Karachi OR Lahore OR Peshawar OR Quetta OR Sindh OR "Pakistan Tehreek-e-Insaf" OR "Pakistan Muslim League" OR "Pakistan Peoples Party"';
-
-const PK_DOMAINS =
-  "dawn.com,tribune.com.pk,thenews.com.pk,geo.tv,arynews.tv,brecorder.com,nation.com.pk,dailytimes.com.pk,samaa.tv";
-
-// Common Indian outlets that otherwise slip into "Pakistan" results via
-// syndicated/wire content or ambiguous keyword matches. Excluded whenever
-// the selected country isn't India itself.
-const INDIAN_DOMAINS_TO_EXCLUDE =
-  "timesofindia.indiatimes.com,indiatimes.com,ndtv.com,hindustantimes.com,indianexpress.com,news18.com,indiatoday.in,livemint.com,thehindu.com,zeenews.india.com";
-
-// Curated international wire/broadcast sources for the "Global" option.
-const GLOBAL_DOMAINS =
-  "bbc.co.uk,cnn.com,reuters.com,apnews.com,theguardian.com,nytimes.com,skynews.com,independent.co.uk,cbsnews.com,aljazeera.com";
-
-// For any country besides Pakistan (which has the curated PK_DOMAINS list
-// above), bias the search toward that country by name + demonym instead
-// of a domain list — e.g. "India OR Indian" — since NewsAPI's free plan
-// doesn't support real per-country top-headlines and we don't maintain a
-// curated domain list for every country in the selector.
 function countryKeyword(country) {
   const meta = countryMeta(country);
   if (!meta) return null;
@@ -84,53 +207,42 @@ function categoryKeyword(category, country) {
   return cKw ? `(${catKw}) AND (${cKw})` : catKw;
 }
 
-function buildEverythingUrl({ domains, excludeDomains, keyword, page }) {
-  const params = new URLSearchParams();
-  if (domains) params.set("domains", domains);
-  if (excludeDomains) params.set("excludeDomains", excludeDomains);
-  if (keyword) params.set("q", keyword);
-  params.set("language", "en");
-  params.set("sortBy", "publishedAt");
-  params.set("pageSize", "40");
-  params.set("page", page);
-  return `${BASE_URL}/everything?${params.toString()}`;
-}
+async function fetchNewsAPIArticles({ category, country, query, page, apiKey }) {
+  try {
+    const params = new URLSearchParams();
+    params.set("language", "en");
+    params.set("sortBy", "publishedAt");
+    params.set("pageSize", "30");
+    params.set("page", page);
 
-// NewsAPI's free "Developer" plan quota is small (100 requests/day). The
-// live-refresh polling plus fast tab/toggle switching during normal use
-// can burn through that quickly and then every request starts failing for
-// the rest of the day. A short in-memory cache means repeat requests for
-// the same tab/toggle within CACHE_TTL_MS are served from memory instead
-// of hitting NewsAPI (and re-running the model curation below) again.
-// This resets whenever the dev server restarts, which is fine — it only
-// needs to survive between polls/tab switches.
-const CACHE_TTL_MS = 90 * 1000;
-const cache = new Map();
+    if (query) {
+      params.set("q", sanitizeQuery(query));
+      const excludeDomains = country === "in" ? undefined : INDIAN_DOMAINS_TO_EXCLUDE;
+      if (excludeDomains) params.set("excludeDomains", excludeDomains);
+    } else {
+      const domains = country === "pk" ? PK_DOMAINS : country === "global" ? GLOBAL_DOMAINS : undefined;
+      const excludeDomains = country === "in" ? undefined : INDIAN_DOMAINS_TO_EXCLUDE;
+      const keyword = categoryKeyword(category, country);
+      if (domains) params.set("domains", domains);
+      if (excludeDomains) params.set("excludeDomains", excludeDomains);
+      if (keyword) params.set("q", keyword);
+    }
 
-function getCached(key) {
-  const hit = cache.get(key);
-  if (!hit) return null;
-  if (Date.now() - hit.time > CACHE_TTL_MS) {
-    cache.delete(key);
+    const res = await fetch(`${NEWSAPI_BASE}/everything?${params.toString()}`, {
+      headers: { "X-Api-Key": apiKey },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.articles || []).filter((a) => a.title && a.title !== "[Removed]");
+  } catch {
     return null;
   }
-  return hit.value;
 }
 
-function setCached(key, value) {
-  cache.set(key, { value, time: Date.now() });
-}
-
-// --- AI curation ------------------------------------------------------
-//
-// Domain/keyword filtering narrows things down, but it still lets through
-// syndicated wire pieces that technically match (e.g. an old celebrity
-// story republished by a Pakistani outlet). Claude reviews the fetched
-// batch and picks out the articles that are genuinely current and
-// relevant to the requested category/country, filtering out stale or
-// off-topic syndicated filler. This is optional: if ANTHROPIC_API_KEY
-// isn't set, or the call fails or times out, the route just falls back to
-// the plain NewsAPI ordering — curation never blocks the feed.
+// ─── AI Curation (optional — Anthropic) ──────────────────────────────────────
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 const CURATION_TIMEOUT_MS = 8000;
@@ -214,191 +326,104 @@ ${listing}`;
 
     return indices.map((i) => articles[i]);
   } catch (err) {
-    // Timeout, network error, or unparseable response — never let curation
-    // failure break the feed itself.
     console.error("Article curation skipped:", err.message || err);
     return articles;
   }
 }
 
-export async function GET(request) {
-  const apiKey = process.env.NEWS_API_KEY;
+// ─── In-memory cache ──────────────────────────────────────────────────────────
 
-  if (!apiKey || apiKey === "your_newsapi_org_key_here") {
-    return NextResponse.json(
-      {
-        error:
-          "Missing NEWS_API_KEY. Add your free key from https://newsapi.org/register to .env.local",
-      },
-      { status: 500 }
-    );
+const CACHE_TTL_MS = 90 * 1000;
+const cache = new Map();
+
+function getCached(key) {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.time > CACHE_TTL_MS) {
+    cache.delete(key);
+    return null;
   }
+  return hit.value;
+}
 
+function setCached(key, value) {
+  cache.set(key, { value, time: Date.now() });
+}
+
+// ─── Shape normalizer ─────────────────────────────────────────────────────────
+
+function normalizeArticles(rawList, category) {
+  return rawList
+    .filter((a) => a.title && !a.title.includes("[Removed]"))
+    .map((a, i) => ({
+      id: `${a.url || i}-${i}`,
+      title: a.title,
+      description: a.description || null,
+      content: a.content || null,
+      url: a.url,
+      image: a.image || a.urlToImage || getEditorialFallback(a.title, category, i),
+      source: a.source?.name || a.source || "News",
+      author: a.author || null,
+      publishedAt: a.publishedAt || null,
+      category,
+    }));
+}
+
+// ─── GET handler ──────────────────────────────────────────────────────────────
+
+export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") || "general";
-  const query = searchParams.get("q");
-  const page = searchParams.get("page") || "1";
-  const country = searchParams.get("country") || "pk";
+  const query    = searchParams.get("q") || null;
+  const page     = searchParams.get("page") || "1";
+  const country  = searchParams.get("country") || "pk";
   const isSearch = Boolean(query && query.trim().length > 0);
 
-  let url;
-  let sanitized;
-  if (isSearch) {
-    sanitized = sanitizeQuery(query);
-    const excludeDomains = country === "in" ? undefined : INDIAN_DOMAINS_TO_EXCLUDE;
-    url = buildEverythingUrl({ keyword: sanitized, excludeDomains, page });
-  } else {
-    const domains =
-      country === "pk" ? PK_DOMAINS : country === "global" ? GLOBAL_DOMAINS : undefined;
-    const excludeDomains = country === "in" ? undefined : INDIAN_DOMAINS_TO_EXCLUDE;
-    const keyword = categoryKeyword(category, country);
-    url = buildEverythingUrl({ domains, excludeDomains, keyword, page });
-  }
-
-  const cacheKey = url;
+  const cacheKey = `${category}|${country}|${query}|${page}`;
   const cached = getCached(cacheKey);
-  if (cached) {
-    return NextResponse.json(cached);
-  }
+  if (cached) return NextResponse.json(cached);
 
-  const fetchArticles = async (targetUrl) => {
-    const res = await fetch(targetUrl, {
-      headers: { "X-Api-Key": apiKey },
-      cache: "no-store",
-    });
-
-    // Don't assume the response is JSON. NewsAPI (or a proxy/CDN in front
-    // of it) can return an HTML error/block page when rate-limited or
-    // having an outage, and calling res.json() on that throws — which used
-    // to surface as an opaque "could not reach the news service" error.
-    const raw = await res.text();
-    let data;
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      data = {
-        status: "error",
-        message: raw.slice(0, 200) || "Non-JSON response from NewsAPI.",
-      };
-    }
-    return { res, data };
-  };
-
+  // ── 1. Google News RSS (primary — works everywhere, no key needed) ──────────
   try {
-    let { res, data } = await fetchArticles(url);
+    const rssQuery = isSearch ? query : null;
+    const rssItems = await fetchGoogleNewsRSS({ category, country, query: rssQuery });
 
-    if (!res.ok) {
-      // 426/429/401 from NewsAPI on the free plan almost always means the
-      // small daily request quota has been used up for today.
-      const likelyQuota = [401, 426, 429].includes(res.status);
-      return NextResponse.json(
-        {
-          error: likelyQuota
-            ? "NewsAPI's free-plan daily request limit has likely been reached. Wait a bit (quota resets daily) or check https://newsapi.org/account."
-            : data.message || "Failed to fetch news.",
-        },
-        { status: res.status }
-      );
+    if (rssItems && rssItems.length > 0) {
+      let articles = normalizeArticles(rssItems, category);
+
+      // Optional AI curation
+      articles = await curateArticles(articles, { category, country, isSearch });
+
+      const body = { articles, totalResults: articles.length, source: "google-news-rss" };
+      setCached(cacheKey, body);
+      return NextResponse.json(body);
     }
-
-    let usedFallback = false;
-
-    // NewsAPI's free-plan index for smaller regional (Pakistani) domains is
-    // often very sparse — a domains+keyword combo can legitimately match
-    // just one or two articles even though the request itself succeeded.
-    // The old check only widened the search when the result was completely
-    // empty (length === 0), so a "technically non-empty" but tiny response
-    // (e.g. 1 article) slipped through and that single article was all the
-    // user ever saw. Trigger the same broaden-and-merge fallback whenever
-    // the domain-restricted result is thin, not just when it's empty, and
-    // MERGE the two result sets (deduped by url) instead of throwing the
-    // original away, so we keep growing the pool instead of swapping it.
-    const MIN_ACCEPTABLE_RESULTS = 8;
-
-    if ((data.articles?.length || 0) < MIN_ACCEPTABLE_RESULTS && !isSearch) {
-      const keyword =
-        categoryKeyword(category, country) ||
-        (country !== "global" ? countryKeyword(country) : null) ||
-        "world news";
-      const excludeDomains = country === "in" ? undefined : INDIAN_DOMAINS_TO_EXCLUDE;
-      const fallbackUrl = buildEverythingUrl({ keyword, excludeDomains, page });
-      const fallback = await fetchArticles(fallbackUrl);
-      if (fallback.res.ok && fallback.data.articles?.length > 0) {
-        const seen = new Set((data.articles || []).map((a) => a.url));
-        const merged = [
-          ...(data.articles || []),
-          ...fallback.data.articles.filter((a) => !seen.has(a.url)),
-        ];
-        data = { ...fallback.data, articles: merged };
-        usedFallback = true;
-      }
-    }
-
-    // A sanitized multi-word search can still come back thin (NewsAPI's
-    // free tier index isn't huge). Retry once with just the last, usually
-    // most specific, keyword and merge in anything new before giving up.
-    if (
-      (data.articles?.length || 0) < MIN_ACCEPTABLE_RESULTS &&
-      isSearch &&
-      sanitized &&
-      sanitized.includes(" ")
-    ) {
-      const lastWord = sanitized.trim().split(/\s+/).pop();
-      const excludeDomains = country === "in" ? undefined : INDIAN_DOMAINS_TO_EXCLUDE;
-      const fallbackUrl = buildEverythingUrl({ keyword: lastWord, excludeDomains, page });
-      const fallback = await fetchArticles(fallbackUrl);
-      if (fallback.res.ok && fallback.data.articles?.length > 0) {
-        const seen = new Set((data.articles || []).map((a) => a.url));
-        const merged = [
-          ...(data.articles || []),
-          ...fallback.data.articles.filter((a) => !seen.has(a.url)),
-        ];
-        data = { ...fallback.data, articles: merged };
-        usedFallback = true;
-      }
-    }
-
-    // Merging the primary + fallback batches can interleave older
-    // (fallback) articles ahead of fresher ones, or the domain-restricted
-    // batch itself can front-load a stale item if that domain's crawl
-    // lagged. Always re-sort the final set by publish date, newest first,
-    // so the freshest article is always what the user sees first.
-    if (Array.isArray(data.articles)) {
-      data.articles = [...data.articles].sort(
-        (a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
-      );
-    }
-
-    let articles = (data.articles || [])
-      .filter((a) => a.title && a.title !== "[Removed]")
-      .map((a, i) => ({
-        id: `${a.url}-${i}`,
-        title: a.title,
-        description: a.description,
-        content: a.content,
-        url: a.url,
-        image: a.urlToImage || getEditorialFallback(a.title, category, i),
-        source: a.source?.name || "Unknown source",
-        author: a.author,
-        publishedAt: a.publishedAt,
-        category,
-      }));
-
-    articles = await curateArticles(articles, { category, country, isSearch });
-
-    const responseBody = {
-      articles,
-      totalResults: data.totalResults || 0,
-      usedFallback,
-    };
-    setCached(cacheKey, responseBody);
-
-    return NextResponse.json(responseBody);
   } catch (err) {
-    console.error("NewsAPI request failed:", err);
-    return NextResponse.json(
-      { error: "Could not reach the news service. Try again in a moment." },
-      { status: 502 }
-    );
+    console.error("Google News RSS error:", err.message || err);
   }
+
+  // ── 2. NewsAPI (secondary — works on localhost only with free key) ──────────
+  const newsApiKey = process.env.NEWS_API_KEY;
+  if (newsApiKey && newsApiKey !== "your_newsapi_org_key_here") {
+    try {
+      const rawArticles = await fetchNewsAPIArticles({
+        category, country, query, page, apiKey: newsApiKey,
+      });
+
+      if (rawArticles && rawArticles.length > 0) {
+        let articles = normalizeArticles(rawArticles, category);
+        articles = await curateArticles(articles, { category, country, isSearch });
+
+        const body = { articles, totalResults: articles.length, source: "newsapi" };
+        setCached(cacheKey, body);
+        return NextResponse.json(body);
+      }
+    } catch (err) {
+      console.error("NewsAPI error:", err.message || err);
+    }
+  }
+
+  // ── 3. Nothing worked — return empty gracefully (no 500 error) ──────────────
+  const body = { articles: [], totalResults: 0, source: "none" };
+  return NextResponse.json(body);
 }
